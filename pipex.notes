@@ -1,0 +1,20 @@
+SHELL REDIRECTION AND PIPES
+https://ryanstutorials.net/linuxtutorial/piping.php
+
+> INDICATES SAVE TO FILE INSTEAD OF STDOUT
+
+
+1. open infile and read to buffer
+2. pass buffer to cmd1 function
+3. pass return of cmd1 to cmd2 function
+4. write return to outfile
+
+ open, close, read, write,
+malloc, free, 
+perror, strerror, access, 
+dup, dup2, = copies file descriptor
+execve, exit, fork, pipe,
+unlink, wait, waitpid
+
+stdin (0), stdout (1), stderr(2), execve = streams, read up on
+perror, strerror = error handling
