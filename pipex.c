@@ -17,7 +17,6 @@ void	execute(char *cmd, char **env)
 	char	**s_cmd;
 	char	*path;	
 	
-	
 	s_cmd = ft_split(cmd, ' ');
 	path = get_path(s_cmd[0], env);
 	if (execve(path, s_cmd, env) == -1)
@@ -29,12 +28,10 @@ void	execute(char *cmd, char **env)
 	}
 }
 
-void	child_one(char **av, int *pfd, char **env)
+void	child(char **av, int *pfd, char **env)
 {
 	int	fd;
-	
 	fd = open(av[1], O_RDONLY);
-	close(pfd[0]);
 	if (fd < 0)
 	{
 		close(pfd[1]);
@@ -43,35 +40,42 @@ void	child_one(char **av, int *pfd, char **env)
 	}
 	else
 	{
-		dup2(fd, 0);
+		if (dup2(fd, 0) < 0)
+			exit (1);
 		dup2(pfd[1], 1);
+		close(pfd[0]);
+		close(fd);
 		execute(av[2], env);
 	}
 }
 
 
-void	child_two(char **av, int *pfd, char **env)
+void	parent(char **av, int *pfd, char **env)
 {
 	int	fd;
-	
 	fd = open(av[4], O_RDWR | O_CREAT);
+
 	if (fd < 0)
 	{
-		close(pfd[1]);
+		close(pfd[0]);
 		perror("error");
 		exit (1);
 	}
-	dup2(fd, 1);
-	dup2(pfd[0], 0);
-	close(pfd[1]);
-	execute(av[3], env);
+	else
+	{
+		dup2(fd, 1);
+		dup2(pfd[0], 0);
+		close(pfd[1]);
+		close(fd);
+		execute(av[3], env);
+	}
 }
 
 int	main(int ac, char **av, char **env)
 {
 	int	pfd[2];
 	pid_t	pid1;
-	pid_t	pid2;
+	//pid_t	pid2;
 	int	status;
 
 	if (ac != 5)
@@ -87,16 +91,17 @@ int	main(int ac, char **av, char **env)
 		return (perror("Fork: "), -1);
 		exit(-1);
 	}
-	if (pid1 == 0)
-		child_one(av, pfd, env);
-	pid2 = fork();
+	/*pid2 = fork();child_two
+	printf("%s\n%d\n", "forked pid2", pid2);
 	if (pid2 < 0)
 	{
 		return (perror("Fork: "), -1);
 		exit(-1);
-	}
-	if (pid2 == 0)
-		child_two(av, pfd, env);
+	}*/
+	if (pid1 == 0)
+		child(av, pfd, env);
 	waitpid(pid1, &status, 0);
-	waitpid(pid2, &status, 0);
+	if (pid1 > 0)
+		parent(av, pfd, env);
+	//waitpid(pid2, &status, 0);
 }
